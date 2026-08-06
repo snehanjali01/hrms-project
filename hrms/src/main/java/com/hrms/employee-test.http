@@ -1,0 +1,11 @@
+GET http://localhost:8080/api/employees?page=0&size=5
+
+###
+GET http://localhost:8080/api/employees?departmentId=1&page=0&size=3
+
+###
+GET http://localhost:8080/api/employees?firstName=an&page=0&size=5
+
+//pagination nd sorting
+###
+GET http://localhost:8080/api/employees?page=0&size=5&sort=firstName,asc

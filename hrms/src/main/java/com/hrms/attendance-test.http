@@ -1,0 +1,50 @@
+### 1. Anita (id=4) checks in
+POST http://localhost:8080/api/attendance/check-in
+Content-Type: application/json
+
+{
+  "employeeId": 4
+}
+
+### 2. Try checking in again - should return 409 (already checked in today)
+POST http://127.0.0.1:8080/api/attendance/check-in
+Content-Type: application/json
+
+{
+  "employeeId": 4
+}
+
+### 3. Anita checks out
+PUT http://localhost:8080/api/attendance/check-out
+Content-Type: application/json
+
+{
+  "employeeId": 4
+}
+
+### 4. Try checking out again - should return 400 (already checked out)
+PUT http://localhost:8080/api/attendance/check-out
+Content-Type: application/json
+
+{
+  "employeeId": 4
+}
+
+### 5. Try checking out someone who never checked in (e.g. Vikram, id=5) - should return 400
+PUT http://localhost:8080/api/attendance/check-out
+Content-Type: application/json
+
+{
+  "employeeId": 5
+}
+
+### 6. See Anita's full attendance record
+GET http://localhost:8080/api/attendance?employeeId=4
+
+### 7.Raj
+POST http://localhost:8080/api/attendance/check-in
+Content-Type: application/json
+
+{
+  "employeeId": 3
+}

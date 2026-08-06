@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-add-salary-to-employee-table
+      author: hrms-backend
+      changes:
+        - addColumn:
+            tableName: employee
+            columns:
+              - column:
+                  name: salary
+                  type: DECIMAL(12,2)
+                  constraints:
+                    nullable: true

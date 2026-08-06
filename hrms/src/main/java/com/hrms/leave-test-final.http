@@ -1,0 +1,45 @@
+### 1. Anita (id=4) submits a leave request
+POST http://localhost:8080/api/leave-requests
+Content-Type: application/json
+
+{
+  "employeeId": 4,
+  "startDate": "2026-08-10",
+  "endDate": "2026-08-12",
+  "reason": "Wedding"
+}
+
+### 2. Check the real id this leave request got - LOOK AT THE RESPONSE, note "id"
+GET http://localhost:8080/api/leave-requests?employeeId=4
+
+### 3. Jane (id=2, Anita's REAL manager) approves it - replace {id} in URL with the real id from step 2
+PUT http://localhost:8080/api/leave-requests/3/decision
+Content-Type: application/json
+
+{
+  "approverId": 2,
+  "decision": "APPROVED"
+}
+
+### 4. Confirm it's now APPROVED
+GET http://localhost:8080/api/leave-requests?employeeId=4
+
+### 5. NEGATIVE TEST: Raj (id=3, NOT Anita's manager) submits leave, Vikram tries to approve - should fail
+POST http://localhost:8080/api/leave-requests
+Content-Type: application/json
+
+{
+  "employeeId": 3,
+  "startDate": "2026-10-01",
+  "endDate": "2026-10-02",
+  "reason": "Test"
+}
+
+### 6. Check the real id from step 5's response, then Vikram (id=5, not Raj's manager) tries to approve - replace {id}
+PUT http://localhost:8080/api/leave-requests/4/decision
+Content-Type: application/json
+
+{
+  "approverId": 5,
+  "decision": "APPROVED"
+}

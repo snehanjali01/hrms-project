@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-seed-role-data
+      author: hrms-backend
+      changes:
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: name
+                  value: ADMIN
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: name
+                  value: HR
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: name
+                  value: MANAGER
+        - insert:
+            tableName: role
+            columns:
+              - column:
+                  name: name
+                  value: EMPLOYEE

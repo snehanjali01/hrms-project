@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 016
+      author: hrms
+      changes:
+        - customChange:
+            class: com.hrms.migration.EmployeeDirectoryMigrationChange
+      comment: "Custom Java-based migration: copies employee names into employee_directory using a CustomTaskChange class, tracked directly by Liquibase."

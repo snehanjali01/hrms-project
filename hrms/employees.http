@@ -1,0 +1,143 @@
+### Add 10 more employees to populate pagination testing
+
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Priya",
+  "lastName": "Nair",
+  "email": "priya.nair@acme.com",
+  "employeeCode": "EMP103",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Arjun",
+  "lastName": "Reddy",
+  "email": "arjun.reddy@acme.com",
+  "employeeCode": "EMP104",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Kavya",
+  "lastName": "Iyer",
+  "email": "kavya.iyer@acme.com",
+  "employeeCode": "EMP105",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Rohan",
+  "lastName": "Mehta",
+  "email": "rohan.mehta@acme.com",
+  "employeeCode": "EMP106",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Sneha",
+  "lastName": "Gupta",
+  "email": "sneha.gupta@acme.com",
+  "employeeCode": "EMP107",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Karan",
+  "lastName": "Malhotra",
+  "email": "karan.malhotra@acme.com",
+  "employeeCode": "EMP108",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Divya",
+  "lastName": "Rao",
+  "email": "divya.rao@acme.com",
+  "employeeCode": "EMP109",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Aditya",
+  "lastName": "Joshi",
+  "email": "aditya.joshi@acme.com",
+  "employeeCode": "EMP110",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Meera",
+  "lastName": "Pillai",
+  "email": "meera.pillai@acme.com",
+  "employeeCode": "EMP111",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+###
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "firstName": "Vivek",
+  "lastName": "Chauhan",
+  "email": "vivek.chauhan@acme.com",
+  "employeeCode": "EMP112",
+  "companyId": 1,
+  "departmentId": 1,
+  "createUserAccount": false
+}
+
+### Check the total count now
+GET http://localhost:8080/api/employees?page=0&size=100

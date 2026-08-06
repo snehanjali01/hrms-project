@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-alter-attendance-timezone-columns
+      author: hrms-backend
+      changes:
+        - modifyDataType:
+            tableName: attendance
+            columnName: check_in_time
+            newDataType: TIMESTAMP WITH TIME ZONE
+        - modifyDataType:
+            tableName: attendance
+            columnName: check_out_time
+            newDataType: TIMESTAMP WITH TIME ZONE
+      comment: "Changed check_in_time and check_out_time to TIMESTAMP WITH TIME ZONE to support ZonedDateTime in the Attendance entity, since attendance events may need to record which timezone the check-in/check-out occurred in."

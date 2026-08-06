@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-create-payroll-table
+      author: hrms-backend
+      changes:
+        - createTable:
+            tableName: payroll
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: employee_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_payroll_employee
+                    references: employee(id)
+              - column:
+                  name: pay_period_month
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pay_period_year
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: basic_salary
+                  type: DECIMAL(12,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deductions
+                  type: DECIMAL(12,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: net_salary
+                  type: DECIMAL(12,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: generated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addUniqueConstraint:
+            tableName: payroll
+            columnNames: employee_id, pay_period_month, pay_period_year
+            constraintName: uq_payroll_employee_period
