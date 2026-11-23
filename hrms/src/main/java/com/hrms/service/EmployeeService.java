@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class EmployeeService {
     private final CompanyRepository companyRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public Employee createEmployee(EmployeeCreateRequest request) {
@@ -90,7 +92,7 @@ public class EmployeeService {
 
             User user = new User();
             user.setUsername(request.getUsername());
-            user.setPassword(request.getPassword());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setEmployee(savedEmployee);
 
             userRepository.save(user);

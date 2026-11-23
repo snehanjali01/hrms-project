@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -24,8 +25,13 @@ class UserServiceTest{
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UserService userService;
+
+    private static final String STORED_HASH = "$2a$10$storedHashForSecurePass123";
 
     private User user;
 
@@ -34,7 +40,7 @@ class UserServiceTest{
         user = new User();
         user.setId(1L);
         user.setUsername("neha.singh");
-        user.setPassword("SecurePass123");
+        user.setPassword(STORED_HASH);
     }
 
     @Test
@@ -44,6 +50,7 @@ class UserServiceTest{
         request.setPassword("SecurePass123");
 
         when(userRepository.findByUsername("neha.singh")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("SecurePass123", STORED_HASH)).thenReturn(true);
 
         User result = userService.login(request);
 
@@ -70,6 +77,7 @@ class UserServiceTest{
         request.setPassword("WrongPassword");
 
         when(userRepository.findByUsername("neha.singh")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("WrongPassword", STORED_HASH)).thenReturn(false);
 
         assertThatThrownBy(() -> userService.login(request))
                 .isInstanceOf(InvalidRequestException.class)
@@ -79,9 +87,13 @@ class UserServiceTest{
     @Test
     void changePassword_shouldUpdatePassword_whenCurrentPasswordIsCorrect() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("SecurePass123", STORED_HASH)).thenReturn(true);
+        when(passwordEncoder.encode("NewPass456")).thenReturn("$2a$10$newHash");
 
         userService.changePassword(1L, "SecurePass123", "NewPass456");
-        assertThat(user.getPassword()).isEqualTo("NewPass456");
+
+        assertThat(user.getPassword()).isEqualTo("$2a$10$newHash");
+        assertThat(user.getPassword()).isNotEqualTo("NewPass456");
         verify(userRepository).save(user);
     }
 
@@ -97,6 +109,7 @@ class UserServiceTest{
     @Test
     void changePassword_shouldThrow_whenCurrentPasswordIsWrong() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("WrongOldPassword", STORED_HASH)).thenReturn(false);
 
         assertThatThrownBy(() -> userService.changePassword(1L, "WrongOldPassword", "NewPass456"))
                 .isInstanceOf(InvalidRequestException.class)
