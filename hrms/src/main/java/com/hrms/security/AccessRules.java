@@ -18,10 +18,11 @@ public final class AccessRules {
     }
 
     /**
-     * Staff (ADMIN, HR, MANAGER) may query any employee, or everyone when none is given.
-     * Everyone else is always scoped to their own employee id, whatever they ask for.
+     * ADMIN and HR may query any employee, or everyone when none is given.
+     * Everyone else (managers use the separate "pending approvals" endpoint for their team)
+     * is always scoped to their own employee id, whatever they ask for.
      */
     public static Long scopeToCaller(Authentication authentication, AuthenticatedUser caller, Long requestedEmployeeId) {
-        return hasAnyRole(authentication, "ADMIN", "HR", "MANAGER") ? requestedEmployeeId : caller.employeeId();
+        return hasAnyRole(authentication, "ADMIN", "HR") ? requestedEmployeeId : caller.employeeId();
     }
 }
