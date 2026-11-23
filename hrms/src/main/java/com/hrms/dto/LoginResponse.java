@@ -15,6 +15,7 @@ public class LoginResponse {
     private Long employeeId;
     private String employeeName;
     private List<String> roles;
+    private String token;
 
     public static LoginResponse fromEntity(User user) {
         LoginResponse response = new LoginResponse();
