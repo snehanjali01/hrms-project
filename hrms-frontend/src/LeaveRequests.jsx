@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import leaveApi from "./leaveApi";
+import api from "./api";
 
 function LeaveRequests({ user }) {
   const [myRequests, setMyRequests] = useState([]);
@@ -17,16 +17,14 @@ function LeaveRequests({ user }) {
     setLoading(true);
     setError("");
     try {
-      const myReqRes = await leaveApi.get("/leave-requests", {
+      const myReqRes = await api.get("/leave-requests", {
         params: { employeeId: user.employeeId },
       });
       setMyRequests(myReqRes.data);
 
-      // Requests waiting on this user, if they manage anyone
+      // Requests waiting on this user, if they manage anyone (the API uses the logged-in user)
       try {
-        const pendingRes = await leaveApi.get("/leave-requests/pending", {
-          params: { managerId: user.employeeId },
-        });
+        const pendingRes = await api.get("/leave-requests/pending");
         setPendingApprovals(pendingRes.data);
       } catch {
         setPendingApprovals([]);
@@ -48,8 +46,7 @@ function LeaveRequests({ user }) {
     setSubmitError("");
     setSubmitting(true);
     try {
-      await leaveApi.post("/leave-requests", {
-        employeeId: user.employeeId,
+      await api.post("/leave-requests", {
         startDate,
         endDate,
         reason,
@@ -69,8 +66,7 @@ function LeaveRequests({ user }) {
 
   async function handleDecision(id, decision) {
     try {
-      await leaveApi.put(`/leave-requests/${id}/decision`, {
-        approverId: user.employeeId,
+      await api.put(`/leave-requests/${id}/decision`, {
         decision,
       });
       fetchAll();

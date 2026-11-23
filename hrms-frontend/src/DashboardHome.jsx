@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import api from "./api";
-import leaveApi from "./leaveApi";
 
 function DashboardHome({ user, onNavigate }) {
   const [totalEmployees, setTotalEmployees] = useState(null);
@@ -9,42 +8,47 @@ function DashboardHome({ user, onNavigate }) {
   const [payrollPending, setPayrollPending] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // The API enforces these rules; the UI only skips calls and cards the user cannot use
+  const roles = user?.roles || [];
+  const isHrOrAdmin = roles.includes("ADMIN") || roles.includes("HR");
+  const isApprover = isHrOrAdmin || roles.includes("MANAGER");
+
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [employeesRes, attendanceRes, leaveRes, payrollRes] =
-          await Promise.all([
-            api.get("/employees", { params: { page: 0, size: 1 } }),
-            api.get("/attendance"),
-            leaveApi.get("/leave-requests"),
-            api.get("/payroll"), // org-wide, no employeeId filter
-          ]);
-
+        const employeesRes = await api.get("/employees", { params: { page: 0, size: 1 } });
         const total = employeesRes.data.totalElements;
         setTotalEmployees(total);
 
-        const today = new Date().toISOString().split("T")[0];
-        const presentCount = attendanceRes.data.filter(
-          (a) => a.attendanceDate === today && a.status === "PRESENT"
-        ).length;
-        setPresentToday(presentCount);
+        if (isHrOrAdmin) {
+          const [attendanceRes, payrollRes] = await Promise.all([
+            api.get("/attendance"),
+            api.get("/payroll"), // org-wide, no employeeId filter
+          ]);
 
-        const pendingCount = leaveRes.data.filter(
-          (lr) => lr.status === "PENDING"
-        ).length;
-        setPendingLeave(pendingCount);
+          const today = new Date().toISOString().split("T")[0];
+          const presentCount = attendanceRes.data.filter(
+            (a) => a.attendanceDate === today && a.status === "PRESENT"
+          ).length;
+          setPresentToday(presentCount);
 
-        // Payroll for month M is generated on the 1st of month M+1 (per the cron job),
-        // so "this period's payroll" always refers to LAST month, not the current one.
-        const now = new Date();
-        const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const targetMonth = prevMonthDate.getMonth() + 1;
-        const targetYear = prevMonthDate.getFullYear();
+          // Payroll for month M is generated on the 1st of month M+1 (per the cron job),
+          // so "this period's payroll" always refers to LAST month, not the current one.
+          const now = new Date();
+          const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          const targetMonth = prevMonthDate.getMonth() + 1;
+          const targetYear = prevMonthDate.getFullYear();
 
-        const generatedCount = payrollRes.data.filter(
-          (p) => p.payPeriodMonth === targetMonth && p.payPeriodYear === targetYear
-        ).length;
-        setPayrollPending(Math.max(total - generatedCount, 0));
+          const generatedCount = payrollRes.data.filter(
+            (p) => p.payPeriodMonth === targetMonth && p.payPeriodYear === targetYear
+          ).length;
+          setPayrollPending(Math.max(total - generatedCount, 0));
+        }
+
+        if (isApprover) {
+          const pendingRes = await api.get("/leave-requests/pending");
+          setPendingLeave(pendingRes.data.length);
+        }
       } catch (err) {
         console.error("Failed to load dashboard stats", err);
       } finally {
@@ -52,7 +56,7 @@ function DashboardHome({ user, onNavigate }) {
       }
     }
     fetchStats();
-  }, [user.employeeId]);
+  }, [user.employeeId, isHrOrAdmin, isApprover]);
 
   const cards = [
     {
@@ -61,6 +65,7 @@ function DashboardHome({ user, onNavigate }) {
       accent: "#0a1f44",
       icon: "👥",
       navigateTo: "employees",
+      visible: true,
     },
     {
       label: "Present Today",
@@ -68,6 +73,7 @@ function DashboardHome({ user, onNavigate }) {
       accent: "#166534",
       icon: "✅",
       navigateTo: "presentToday",
+      visible: isHrOrAdmin,
     },
     {
       label: "Pending Leave Requests",
@@ -75,6 +81,7 @@ function DashboardHome({ user, onNavigate }) {
       accent: "#92400e",
       icon: "🗓️",
       navigateTo: "pendingLeave",
+      visible: isApprover,
     },
     {
       label: "Payroll Status",
@@ -83,6 +90,7 @@ function DashboardHome({ user, onNavigate }) {
       icon: "💰",
       isText: true,
       navigateTo: "payrollOverview",
+      visible: isHrOrAdmin,
     },
   ];
 
@@ -141,7 +149,7 @@ function DashboardHome({ user, onNavigate }) {
           gap: "24px",
         }}
       >
-        {cards.map((card) => (
+        {cards.filter((card) => card.visible).map((card) => (
           <div
             key={card.label}
             onClick={() => onNavigate(card.navigateTo)}

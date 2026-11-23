@@ -9,15 +9,18 @@ import PresentToday from "./PresentToday";
 import PendingLeaveRequests from "./PendingLeaveRequests";
 import PayrollOverview from "./PayrollOverview";
 
-function Dashboard({ user }) {
+function Dashboard({ user, onLogout }) {
   const [activePage, setActivePage] = useState("home");
+
+  // The API enforces these rules; the UI only hides what the user cannot use
+  const isHrOrAdmin = (user?.roles || []).some((role) => role === "ADMIN" || role === "HR");
 
   const menuItems = [
     { key: "home", label: "Dashboard" },
     { key: "employees", label: "Employees" },
     { key: "attendance", label: "Attendance" },
     { key: "leave", label: "Leave Requests" },
-    { key: "payroll", label: "Payroll" },
+    ...(isHrOrAdmin ? [{ key: "payroll", label: "Payroll" }] : []),
   ];
 
   const initials = user?.employeeName
@@ -94,6 +97,20 @@ function Dashboard({ user }) {
               {item.label}
             </div>
           ))}
+
+          <div
+            onClick={onLogout}
+            style={{
+              padding: "12px 16px",
+              marginTop: "24px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "15px",
+              color: "rgba(255,255,255,0.7)",
+            }}
+          >
+            Logout
+          </div>
         </div>
 
         <div
@@ -161,7 +178,7 @@ function Dashboard({ user }) {
         </h1>
 
         {activePage === "employees" ? (
-          <EmployeeList />
+          <EmployeeList canManage={isHrOrAdmin} />
         ) : activePage === "presentToday" ? (
           <PresentToday />
         ) : activePage === "pendingLeave" ? (
