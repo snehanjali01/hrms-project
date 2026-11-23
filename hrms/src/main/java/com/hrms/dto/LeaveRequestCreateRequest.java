@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Setter
 public class LeaveRequestCreateRequest {
 
-    @NotNull(message = "Employee ID is required")
+    // Set from the logged-in user's token by the controller; any value sent by the client is ignored
     private Long employeeId;
 
     @NotNull(message = "Start date is required")

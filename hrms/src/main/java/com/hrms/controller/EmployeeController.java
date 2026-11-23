@@ -4,6 +4,8 @@ import com.hrms.dto.EmployeeCreateRequest;
 import com.hrms.dto.EmployeeEditRequest;
 import com.hrms.dto.EmployeeResponse;
 import com.hrms.entity.Employee;
+import com.hrms.security.AccessRules;
+import com.hrms.security.AuthenticatedUser;
 import com.hrms.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -53,19 +57,35 @@ public class EmployeeController {
             @RequestParam(required = false) Long companyId,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long managerId,
-            Pageable pageable) {
+            Pageable pageable,
+            Authentication authentication,
+            @AuthenticationPrincipal AuthenticatedUser caller) {
 
         Page<EmployeeResponse> result = employeeService.searchEmployees(
                         firstName, lastName, email, employeeCode,
                         companyId, departmentId, managerId, pageable)
-                .map(EmployeeResponse::fromEntity);
+                .map(employee -> toResponseForCaller(employee, authentication, caller));
 
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable Long id) {
+    public ResponseEntity<EmployeeResponse> getEmployeeById(
+            @PathVariable Long id,
+            Authentication authentication,
+            @AuthenticationPrincipal AuthenticatedUser caller) {
         Employee employee = employeeService.getEmployeeById(id);
-        return ResponseEntity.ok(EmployeeResponse.fromEntity(employee));
+        return ResponseEntity.ok(toResponseForCaller(employee, authentication, caller));
+    }
+
+    /** Salary is only visible to ADMIN, HR and the employee themselves. */
+    private EmployeeResponse toResponseForCaller(Employee employee, Authentication authentication, AuthenticatedUser caller) {
+        EmployeeResponse response = EmployeeResponse.fromEntity(employee);
+        boolean canSeeSalary = AccessRules.hasAnyRole(authentication, "ADMIN", "HR")
+                || employee.getId().equals(caller.employeeId());
+        if (!canSeeSalary) {
+            response.setSalary(null);
+        }
+        return response;
     }
 }
