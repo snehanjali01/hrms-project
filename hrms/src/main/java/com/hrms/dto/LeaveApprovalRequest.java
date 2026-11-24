@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 public class LeaveApprovalRequest {
 
-    @NotNull(message = "Approver ID is required")
+    // Set from the logged-in user's token by the controller; any value sent by the client is ignored
     private Long approverId;
 
     @NotNull(message = "Decision is required")

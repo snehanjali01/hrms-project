@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import leaveApi from "./leaveApi";
+import api from "./api";
 
 function PendingLeaveRequests({ user }) {
   const [requests, setRequests] = useState([]);
@@ -10,7 +10,7 @@ function PendingLeaveRequests({ user }) {
     setLoading(true);
     setError("");
     try {
-      const response = await leaveApi.get("/leave-requests");
+      const response = await api.get("/leave-requests/pending");
       setRequests(response.data.filter((lr) => lr.status === "PENDING"));
     } catch (err) {
       setError("Failed to load leave requests");
@@ -25,8 +25,7 @@ function PendingLeaveRequests({ user }) {
 
   async function handleDecision(id, decision) {
     try {
-      await leaveApi.put(`/leave-requests/${id}/decision`, {
-        approverId: user.employeeId,
+      await api.put(`/leave-requests/${id}/decision`, {
         decision,
       });
       fetchPending();

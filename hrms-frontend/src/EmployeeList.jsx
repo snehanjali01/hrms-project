@@ -3,7 +3,7 @@ import api from "./api";
 import EmployeeDetailCard from "./EmployeeDetailCard";
 import AddEmployeeModal from "./AddEmployeeModal.jsx";
 
-function EmployeeList() {
+function EmployeeList({ canManage }) {
   const [employees, setEmployees] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(0);
@@ -124,13 +124,15 @@ function EmployeeList() {
         <button type="submit" style={searchButtonStyle}>
           Search
         </button>
-        <button
-          type="button"
-          onClick={() => setShowAddModal(true)}
-          style={{ ...searchButtonStyle, marginLeft: "auto", background: "#166534" }}
-        >
-          + Add Employee
-        </button>
+        {canManage && (
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            style={{ ...searchButtonStyle, marginLeft: "auto", background: "#166534" }}
+          >
+            + Add Employee
+          </button>
+        )}
       </form>
 
       {error && <p style={{ color: "#b91c1c" }}>{error}</p>}
@@ -229,6 +231,7 @@ function EmployeeList() {
         onClose={() => setSelectedEmployee(null)}
         onUpdated={handleUpdated}
         onDeleted={handleDeleted}
+        canManage={canManage}
       />
 
       {/* Add employee modal */}

@@ -5,6 +5,7 @@ import com.hrms.dto.EmployeeEditRequest;
 import com.hrms.entity.Company;
 import com.hrms.entity.Department;
 import com.hrms.entity.Employee;
+import com.hrms.entity.Role;
 import com.hrms.entity.User;
 import com.hrms.exception.DuplicateResourceException;
 import com.hrms.exception.InvalidRequestException;
@@ -12,16 +13,20 @@ import com.hrms.exception.ResourceNotFoundException;
 import com.hrms.repository.CompanyRepository;
 import com.hrms.repository.DepartmentRepository;
 import com.hrms.repository.EmployeeRepository;
+import com.hrms.repository.RoleRepository;
 import com.hrms.repository.UserRepository;
 import com.hrms.specification.EmployeeSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +35,11 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final DepartmentRepository departmentRepository;
+    private static final String DEFAULT_ROLE = "EMPLOYEE";
+
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public Employee createEmployee(EmployeeCreateRequest request) {
@@ -90,8 +99,11 @@ public class EmployeeService {
 
             User user = new User();
             user.setUsername(request.getUsername());
-            user.setPassword(request.getPassword());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setEmployee(savedEmployee);
+            Role defaultRole = roleRepository.findByName(DEFAULT_ROLE)
+                    .orElseThrow(() -> new IllegalStateException("Role " + DEFAULT_ROLE + " is not seeded"));
+            user.setRoles(new HashSet<>(Set.of(defaultRole)));
 
             userRepository.save(user);
         }

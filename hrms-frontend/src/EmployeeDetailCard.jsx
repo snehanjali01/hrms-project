@@ -1,7 +1,7 @@
 import { useState } from "react";
 import api from "./api";
 
-function EmployeeDetailCard({ employee, onClose, onUpdated, onDeleted }) {
+function EmployeeDetailCard({ employee, onClose, onUpdated, onDeleted, canManage }) {
   const [editingSalary, setEditingSalary] = useState(false);
   const [salaryInput, setSalaryInput] = useState("");
   const [saving, setSaving] = useState(false);
@@ -209,7 +209,7 @@ function EmployeeDetailCard({ employee, onClose, onUpdated, onDeleted }) {
         {/* Details */}
         <div style={{ padding: "24px 28px 28px" }}>
           {/* Edit / Delete action buttons */}
-          {!editingDetails && (
+          {canManage && !editingDetails && (
             <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
               <button onClick={startEditingDetails} style={editButtonStyle}>
                 Edit Details
@@ -305,18 +305,19 @@ function EmployeeDetailCard({ employee, onClose, onUpdated, onDeleted }) {
                   </div>
                 ) : (
                   <span
-                    onClick={startEditingSalary}
+                    onClick={canManage ? startEditingSalary : undefined}
                     style={{
                       fontSize: "14px",
                       color: "#0a1f44",
                       fontWeight: "600",
-                      cursor: "pointer",
-                      textDecoration: "underline",
+                      cursor: canManage ? "pointer" : "default",
+                      textDecoration: canManage ? "underline" : "none",
                       textDecorationStyle: "dotted",
                     }}
-                    title="Click to edit"
+                    title={canManage ? "Click to edit" : undefined}
                   >
-                    {formatCurrency(employee.salary)} ✎
+                    {formatCurrency(employee.salary)}
+                    {canManage ? " ✎" : ""}
                   </span>
                 )}
               </div>

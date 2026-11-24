@@ -32,7 +32,7 @@ function Attendance({ user }) {
     setActionError("");
     setActionLoading(true);
     try {
-      await api.post("/attendance/check-in", { employeeId: user.employeeId });
+      await api.post("/attendance/check-in");
       fetchAttendance();
     } catch (err) {
       setActionError(err.response?.data?.message || "Check-in failed");
@@ -45,7 +45,7 @@ function Attendance({ user }) {
     setActionError("");
     setActionLoading(true);
     try {
-      await api.put("/attendance/check-out", { employeeId: user.employeeId });
+      await api.put("/attendance/check-out");
       fetchAttendance();
     } catch (err) {
       setActionError(err.response?.data?.message || "Check-out failed");

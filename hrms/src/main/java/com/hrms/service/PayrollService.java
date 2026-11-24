@@ -2,7 +2,6 @@ package com.hrms.service;
 
 import com.hrms.dto.PayrollBulkGenerateResponse;
 import com.hrms.dto.PayrollGenerateRequest;
-import com.hrms.entity.Attendance;
 import com.hrms.entity.Employee;
 import com.hrms.entity.LeaveRequest;
 import com.hrms.entity.Payroll;
@@ -21,9 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import com.hrms.enums.LeaveStatus;
 
@@ -64,24 +66,33 @@ public class PayrollService {
         YearMonth period = requestedPeriod;
         LocalDate periodStart = period.atDay(1);
         LocalDate periodEnd = period.atEndOfMonth();
-        int totalDaysInMonth = period.lengthOfMonth();
 
-        List<Attendance> attendanceRecords = attendanceRepository
-                .findByEmployeeIdAndAttendanceDateBetween(request.getEmployeeId(), periodStart, periodEnd);
-        long presentDays = attendanceRecords.stream()
-                .filter(a -> a.getStatus() == AttendanceStatus.PRESENT)
-                .count();
+        // Pay is based on working days (Mon-Fri); weekends carry no attendance, so they are never deducted
+        Map<LocalDate, AttendanceStatus> statusByDate = new HashMap<>();
+        attendanceRepository
+                .findByEmployeeIdAndAttendanceDateBetween(request.getEmployeeId(), periodStart, periodEnd)
+                .forEach(a -> statusByDate.put(a.getAttendanceDate(), a.getStatus()));
 
+        // Includes leave that started in an earlier month but runs into this one
         List<LeaveRequest> approvedLeaves = leaveRequestRepository
-                .findByEmployeeIdAndStatusAndStartDateBetween(
-                        request.getEmployeeId(), LeaveStatus.APPROVED, periodStart, periodEnd);
-        long approvedLeaveDays = approvedLeaves.stream()
-                .mapToLong(leave -> countDaysWithinPeriod(leave, periodStart, periodEnd))
-                .sum();
+                .findOverlapping(request.getEmployeeId(), LeaveStatus.APPROVED, periodStart, periodEnd);
 
-        long unpaidAbsentDays = totalDaysInMonth - presentDays - approvedLeaveDays;
-        if (unpaidAbsentDays < 0) {
-            unpaidAbsentDays = 0;
+        int workingDays = 0;
+        BigDecimal unpaidDays = BigDecimal.ZERO;
+        for (LocalDate day = periodStart; !day.isAfter(periodEnd); day = day.plusDays(1)) {
+            if (isWeekend(day)) {
+                continue;
+            }
+            workingDays++;
+            AttendanceStatus status = statusByDate.get(day);
+            if (status == AttendanceStatus.PRESENT) {
+                continue;
+            }
+            if (status == AttendanceStatus.HALF_DAY) {
+                unpaidDays = unpaidDays.add(new BigDecimal("0.5"));
+            } else if (!isOnApprovedLeave(day, approvedLeaves)) {
+                unpaidDays = unpaidDays.add(BigDecimal.ONE);
+            }
         }
 
         BigDecimal basicSalary = employee.getSalary();
@@ -90,9 +101,9 @@ public class PayrollService {
                     "Employee " + employee.getId() + " has no salary set. Set a salary before generating payroll.");
         }
         BigDecimal perDayRate = basicSalary.divide(
-                BigDecimal.valueOf(totalDaysInMonth), 4, RoundingMode.HALF_UP);
+                BigDecimal.valueOf(workingDays), 4, RoundingMode.HALF_UP);
         BigDecimal deductions = perDayRate
-                .multiply(BigDecimal.valueOf(unpaidAbsentDays))
+                .multiply(unpaidDays)
                 .setScale(2, RoundingMode.HALF_UP);
         BigDecimal netSalary = basicSalary.subtract(deductions);
 
@@ -152,16 +163,12 @@ public class PayrollService {
         return new PayrollBulkGenerateResponse(generated, skipped, skippedReasons);
     }
 
-    private long countDaysWithinPeriod(LeaveRequest leave, LocalDate periodStart, LocalDate periodEnd) {
-        LocalDate effectiveStart = leave.getStartDate().isBefore(periodStart)
-                ? periodStart : leave.getStartDate();
-        LocalDate effectiveEnd = leave.getEndDate().isAfter(periodEnd)
-                ? periodEnd : leave.getEndDate();
+    private boolean isWeekend(LocalDate day) {
+        return day.getDayOfWeek() == DayOfWeek.SATURDAY || day.getDayOfWeek() == DayOfWeek.SUNDAY;
+    }
 
-        if (effectiveEnd.isBefore(effectiveStart)) {
-            return 0;
-        }
-        return java.time.temporal.ChronoUnit.DAYS.between(effectiveStart, effectiveEnd) + 1;
+    private boolean isOnApprovedLeave(LocalDate day, List<LeaveRequest> leaves) {
+        return leaves.stream().anyMatch(l -> !day.isBefore(l.getStartDate()) && !day.isAfter(l.getEndDate()));
     }
 
     public List<Payroll> getPayrollByEmployee(Long employeeId) {

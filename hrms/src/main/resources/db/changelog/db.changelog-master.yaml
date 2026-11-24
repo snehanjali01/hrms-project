@@ -20,6 +20,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/010-create-leave-request-table.yaml
   - include:
+      file: db/changelog/changes/011-create-payroll-table.yaml
+  - include:
       file: db/changelog/changes/012-add-salary-to-employee-table.yaml
   - include:
        file: db/changelog/changes/013-create-employee-directory-table.yaml
